@@ -1,0 +1,795 @@
+
+/**
+ * Stili per il filtro categorie mappa Risviel GisDoc
+ * Ottimizzato per touch screen e accessibilità
+ */
+
+/* ============================================
+   BASE - Container filtri
+   ============================================ */
+.risviel-map-filters {
+    position: absolute;
+    bottom: 135px;
+    right: 10px;
+    z-index: 1000;
+    max-width: 380px;
+    border-radius: 12px;
+    padding: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+}
+
+/* Integrazione con i controlli Leaflet */
+@media (max-width: 1081px) {
+    /*.leaflet-bottom {
+        bottom: 310px !important;
+    }*/
+    .risviel-map-filters {
+        bottom: 330px;
+    }
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.risviel-filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.risviel-filters-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.risviel-filters-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* ============================================
+   PULSANTI AZIONE
+   ============================================ */
+.risviel-filter-btn {
+    min-height: 32px;
+    min-width: 32px;
+    padding: 6px 10px;
+    border: 1px solid #999;
+    border-radius: 6px;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #333;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.risviel-filter-btn:hover,
+.risviel-filter-btn:focus {
+    border-color: #005a87;
+    background: #e6f3fa;
+    color: #004a6e;
+}
+
+.risviel-filter-btn:active {
+    transform: scale(0.98);
+}
+
+.risviel-filter-btn--reset {
+    color: #333;
+    background: #f0f0f0;
+    border-color: #999;
+}
+
+.risviel-filter-btn--reset:hover,
+.risviel-filter-btn--reset:focus {
+    background: #e0e0e0;
+    border-color: #666;
+    color: #111;
+}
+
+.risviel-filter-btn--all {
+    background: #005a87;
+    border-color: #004a6e;
+    color: #fff;
+}
+
+.risviel-filter-btn--all:hover,
+.risviel-filter-btn--all:focus {
+    background: #004060;
+    border-color: #003050;
+    color: #fff;
+}
+
+/* ============================================
+   LISTA FILTRI - Layout a 2 colonne
+   ============================================ */
+.risviel-filters-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+/* ============================================
+   SINGOLO FILTRO ITEM
+   ============================================ */
+.risviel-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    min-height: 32px;
+    background: #f5f5f5;
+    border: 2px solid #ccc;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.risviel-filter-item:hover {
+    background: #e8e8e8;
+    border-color: #999;
+    transform: translateY(-1px);
+}
+
+.risviel-filter-item:focus {
+    outline: 2px solid #005a87;
+    outline-offset: 2px;
+}
+
+.risviel-filter-item:active {
+    transform: scale(0.98);
+}
+
+/* Stato attivo - Alto contrasto */
+.risviel-filter-item.is-active,
+.risviel-filter-item:has(input:checked) {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.risviel-filter-item.is-active .risviel-filter-name,
+.risviel-filter-item:has(input:checked) .risviel-filter-name {
+    color: #fff;
+    font-weight: 600;
+}
+
+/* ============================================
+   CHECKBOX E INDICATORI
+   ============================================ */
+.risviel-filter-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.risviel-filter-indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #888;
+    border-radius: 4px;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.risviel-filter-item.is-active .risviel-filter-indicator,
+.risviel-filter-checkbox:checked + .risviel-filter-indicator {
+    background: #fff;
+    border-color: #fff;
+}
+
+.risviel-filter-item.is-active .risviel-filter-indicator::after,
+.risviel-filter-checkbox:checked + .risviel-filter-indicator::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid #1a1a1a;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+/* Colore e icona categoria */
+.risviel-filter-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+}
+
+.risviel-filter-item.is-active .risviel-filter-color,
+.risviel-filter-item:has(input:checked) .risviel-filter-color {
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.risviel-filter-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.risviel-filter-item.is-active .risviel-filter-icon,
+.risviel-filter-item:has(input:checked) .risviel-filter-icon {
+    filter: brightness(0) invert(1);
+}
+
+.risviel-filter-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #222;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Testo aiuto */
+.risviel-filters-help {
+    margin: 10px 0 0;
+    font-size: 10px;
+    color: #555;
+    font-style: italic;
+}
+
+/* ============================================
+   GRUPPI FILTRO (legacy support)
+   ============================================ */
+.risviel-filter-group {
+    padding: 10px;
+}
+
+.risviel-filter-group:last-child {
+    border-bottom: none;
+}
+
+.risviel-filter-group h4 {
+    margin: 0 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.risviel-filter-options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+.risviel-filter-option {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    cursor: pointer;
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+@media screen and (max-width: 600px) {
+    .risviel-map-filters {
+        padding: 10px;
+        border-radius: 8px;
+        max-width: calc(100vw - 20px);
+        bottom: 10px;
+        right: 10px;
+    }
+
+    .risviel-filters-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .risviel-filters-actions {
+        width: 100%;
+    }
+
+    .risviel-filter-btn {
+        flex: 1;
+        min-height: 36px;
+        padding: 8px 12px;
+    }
+
+    /* Su mobile, una sola colonna */
+    .risviel-filters-list {
+        grid-template-columns: 1fr;
+    }
+
+    .risviel-filter-item {
+        width: 100%;
+        padding: 10px 12px;
+        min-height: 44px;
+    }
+
+    .risviel-filter-indicator {
+        width: 22px;
+        height: 22px;
+    }
+
+    .risviel-filter-name {
+        font-size: 12px;
+    }
+}
+
+/* Touch device */
+@media (pointer: coarse) {
+    .risviel-filter-item {
+        min-height: 40px;
+        padding: 8px 12px;
+    }
+
+    .risviel-filter-btn {
+        min-height: 38px;
+        padding: 8px 14px;
+    }
+
+    .risviel-filter-indicator {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITÀ
+   ============================================ */
+.risviel-filter-item:focus-visible {
+    outline: 3px solid #005a87;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .risviel-filter-item,
+    .risviel-filter-btn,
+    .risviel-filter-indicator {
+        transition: none;
+    }
+}
+
+@media (prefers-contrast: high) {
+    .risviel-filter-item {
+        border: 3px solid #000;
+    }
+
+    .risviel-filter-item.is-active {
+        border-color: #fff;
+    }
+
+    .risviel-filter-btn {
+        border-width: 2px;
+    }
+}
+
+/* ============================================
+   DARK MODE
+   ============================================ */
+@media (prefers-color-scheme: dark) {
+    .risviel-map-filters {
+        background: rgba(30, 30, 30, 0.95);
+    }
+
+    .risviel-filters-title {
+        color: #f0f0f0;
+    }
+
+    .risviel-filter-name {
+        color: #e0e0e0;
+    }
+
+    .risviel-filter-item {
+        background: #3a3a3a;
+        border-color: #555;
+    }
+
+    .risviel-filter-item:hover {
+        background: #4a4a4a;
+        border-color: #777;
+    }
+
+    /* Stato attivo in dark mode */
+    .risviel-filter-item.is-active,
+    .risviel-filter-item:has(input:checked) {
+        background: #fff;
+        border-color: #fff;
+    }
+
+    .risviel-filter-item.is-active .risviel-filter-name,
+    .risviel-filter-item:has(input:checked) .risviel-filter-name {
+        color: #1a1a1a;
+    }
+
+    .risviel-filter-item.is-active .risviel-filter-indicator,
+    .risviel-filter-item:has(input:checked) .risviel-filter-indicator {
+        background: #1a1a1a;
+        border-color: #1a1a1a;
+    }
+
+    .risviel-filter-item.is-active .risviel-filter-indicator::after,
+    .risviel-filter-checkbox:checked + .risviel-filter-indicator::after {
+        border-color: #fff;
+    }
+
+    .risviel-filter-item.is-active .risviel-filter-icon,
+    .risviel-filter-item:has(input:checked) .risviel-filter-icon {
+        filter: none;
+    }
+
+    .risviel-filter-btn {
+        background: #3a3a3a;
+        border-color: #666;
+        color: #f0f0f0;
+    }
+
+    .risviel-filter-btn:hover,
+    .risviel-filter-btn:focus {
+        background: #4a4a4a;
+        border-color: #888;
+        color: #fff;
+    }
+
+    .risviel-filter-btn--all {
+        background: #0073aa;
+        border-color: #0073aa;
+        color: #fff;
+    }
+
+    .risviel-filter-btn--all:hover,
+    .risviel-filter-btn--all:focus {
+        background: #005a87;
+        border-color: #005a87;
+    }
+
+    .risviel-filter-indicator {
+        background: #2a2a2a;
+        border-color: #666;
+    }
+
+    .risviel-filters-help {
+        color: #aaa;
+    }
+}
+
+
+
+
+
+
+/**
+ * Stili per il filtro categorie integrato come controllo Leaflet
+ * Sostituisce la legenda
+ */
+
+/* ============================================
+   OVERRIDE LEAFLET LEGEND PER IL FILTRO
+   ============================================ */
+#risviel-map-filters.leaflet-legend {
+    max-width: 380px;
+    padding: 0;
+    background: rgba(18, 18, 18, 0.95) !important;
+    border: 1px solid rgba(64, 64, 64, 0.8) !important;
+    border-radius: 16px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+    backdrop-filter: blur(20px) !important;
+}
+
+#risviel-map-filters .leaflet-legend-contents {
+    padding: 12px;
+}
+
+#risviel-map-filters .leaflet-legend-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+/* ============================================
+   HEADER
+   ============================================ */
+.risviel-filters-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.risviel-filters-title {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #f0f0f0;
+}
+
+.risviel-filters-actions {
+    display: flex;
+    gap: 6px;
+}
+
+/* ============================================
+   PULSANTI AZIONE
+   ============================================ */
+.risviel-filter-btn {
+    min-height: 32px;
+    min-width: 32px;
+    padding: 6px 10px;
+    border: 1px solid #666;
+    border-radius: 6px;
+    background: #3a3a3a;
+    font-size: 12px;
+    font-weight: 600;
+    color: #f0f0f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+}
+
+.risviel-filter-btn:hover,
+.risviel-filter-btn:focus {
+    background: #4a4a4a;
+    border-color: #888;
+    color: #fff;
+}
+
+.risviel-filter-btn:active {
+    transform: scale(0.98);
+}
+
+.risviel-filter-btn--reset {
+    color: #f0f0f0;
+    background: #3a3a3a;
+    border-color: #666;
+}
+
+.risviel-filter-btn--reset:hover,
+.risviel-filter-btn--reset:focus {
+    background: #4a4a4a;
+    border-color: #888;
+    color: #fff;
+}
+
+.risviel-filter-btn--all {
+    background: #0073aa;
+    border-color: #0073aa;
+    color: #fff;
+}
+
+.risviel-filter-btn--all:hover,
+.risviel-filter-btn--all:focus {
+    background: #005a87;
+    border-color: #005a87;
+}
+
+/* ============================================
+   LISTA FILTRI - Layout a 2 colonne
+   ============================================ */
+#risviel-map-filters .risviel-filters-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+}
+
+/* ============================================
+   SINGOLO FILTRO ITEM
+   ============================================ */
+#risviel-map-filters .risviel-filter-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    min-height: 32px;
+    background: #2a2a2a;
+    border: 2px solid #555;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    margin: 0;
+}
+
+#risviel-map-filters .risviel-filter-item:hover {
+    background: #3a3a3a;
+    border-color: #777;
+    transform: translateY(-1px);
+}
+
+#risviel-map-filters .risviel-filter-item:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+#risviel-map-filters .risviel-filter-item:active {
+    transform: scale(0.98);
+}
+
+/* Stato attivo - Alto contrasto */
+#risviel-map-filters .risviel-filter-item.is-active {
+    background: #fff;
+    border-color: #fff;
+    box-shadow: 0 2px 8px rgba(255, 255, 255, 0.3);
+}
+
+#risviel-map-filters .risviel-filter-item.is-active .risviel-filter-name {
+    color: #1a1a1a;
+    font-weight: 600;
+}
+
+/* ============================================
+   CHECKBOX E INDICATORI
+   ============================================ */
+.risviel-filter-checkbox {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.risviel-filter-indicator {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #666;
+    border-radius: 4px;
+    background: #2a2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+#risviel-map-filters .risviel-filter-item.is-active .risviel-filter-indicator {
+    background: #1a1a1a;
+    border-color: #1a1a1a;
+}
+
+#risviel-map-filters .risviel-filter-item.is-active .risviel-filter-indicator::after {
+    content: '';
+    width: 5px;
+    height: 9px;
+    border: solid #fff;
+    border-width: 0 2.5px 2.5px 0;
+    transform: rotate(45deg);
+    margin-top: -2px;
+}
+
+/* Colore e icona categoria */
+.risviel-filter-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+#risviel-map-filters .risviel-filter-item.is-active .risviel-filter-color {
+    border-color: rgba(0, 0, 0, 0.3);
+}
+
+.risviel-filter-icon {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+#risviel-map-filters .risviel-filter-item.is-active .risviel-filter-icon {
+    filter: none;
+}
+
+.risviel-filter-name {
+    font-size: 11px;
+    font-weight: 500;
+    color: #e0e0e0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Loading */
+.risviel-filter-loading {
+    padding: 20px;
+    text-align: center;
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* ============================================
+   RESPONSIVE - Mobile
+   ============================================ */
+@media screen and (max-width: 600px) {
+    #risviel-map-filters.leaflet-legend {
+        max-width: calc(100vw - 20px);
+    }
+
+    .risviel-filters-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .risviel-filters-actions {
+        width: 100%;
+    }
+
+    .risviel-filter-btn {
+        flex: 1;
+        min-height: 36px;
+        padding: 8px 12px;
+    }
+
+    #risviel-map-filters .risviel-filters-list {
+        grid-template-columns: 1fr;
+    }
+
+    #risviel-map-filters .risviel-filter-item {
+        width: 100%;
+        padding: 10px 12px;
+        min-height: 44px;
+    }
+
+    .risviel-filter-indicator {
+        width: 22px;
+        height: 22px;
+    }
+
+    .risviel-filter-name {
+        font-size: 12px;
+    }
+}
+
+/* Touch device */
+@media (pointer: coarse) {
+    #risviel-map-filters .risviel-filter-item {
+        min-height: 40px;
+        padding: 8px 12px;
+    }
+
+    .risviel-filter-btn {
+        min-height: 38px;
+        padding: 8px 14px;
+    }
+
+    .risviel-filter-indicator {
+        width: 22px;
+        height: 22px;
+    }
+}
+
+/* ============================================
+   ACCESSIBILITÀ
+   ============================================ */
+#risviel-map-filters .risviel-filter-item:focus-visible {
+    outline: 3px solid #0073aa;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .risviel-filter-item,
+    .risviel-filter-btn,
+    .risviel-filter-indicator {
+        transition: none;
+    }
+}
