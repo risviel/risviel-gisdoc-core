@@ -296,38 +296,6 @@ class Risviel_GisDoc_Public {
                 )
             ));
 
-            /*wp_enqueue_script('aton-node-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.node.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-pov-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.pov.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-lightprobe-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.lightprobe.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-xpf-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.xpf.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-flare-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.flare.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-eventhub-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.eventhub.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-mathub-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.mathub.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-utils-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.utils.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-scenehub-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.scenehub.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-audiohub-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.audiohub.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-locnode-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.locnode.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-devori-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.devori.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-nav-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.nav.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-xr-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.xr.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-sui-button-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.sui.button.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-sui-label-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.sui.label.js', array('jquery', 'aton-sui-button-js'), '1.0.0', false);
-            wp_enqueue_script('aton-sui-mediapanel-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.sui.mediapanel.js', array('jquery', 'aton-sui-label-js'), '1.0.0', false);
-            wp_enqueue_script('aton-sui-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.sui.js', array('jquery', 'aton-sui-mediapanel-js'), '1.0.0', false);
-            wp_enqueue_script('aton-ui-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.ui.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-avatar-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.avatar.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-photon-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.photon.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-semfactory-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.semfactory.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-fe-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.fe.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-mediaflow-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.mediaflow.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-phygital-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.phygital.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-app-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.app.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-fx-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.fx.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-xpfnetwork-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.xpfnetwork.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-cc-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.cc.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-mres-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.mres.js', array('jquery', 'threejs'), '1.0.0', false);
-            wp_enqueue_script('aton-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.js', array('jquery', 'aton-sui-js'), '1.0.0', false);*/
-
 
             // Crea nonce per sicurezza
             $nonce = wp_create_nonce('risviel_gisdoc_public_nonce');

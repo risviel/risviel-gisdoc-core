@@ -64,4 +64,5 @@ function run_risviel_gisdoc() {
     $plugin->run();
 }
 
-run_risviel_gisdoc();
+// Esegui con priorità 20 per permettere alle extension di registrare filtri prima
+add_action('plugins_loaded', 'run_risviel_gisdoc', 20);

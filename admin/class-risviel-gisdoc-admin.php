@@ -61,19 +61,6 @@ class Risviel_GisDoc_Admin {
         add_action('wp_ajax_risviel_gisdoc_admin_get_panorama', array($this, 'ajax_get_panorama'));
         add_action('wp_ajax_risviel_gisdoc_delete_panorama', array($this, 'ajax_delete_panorama'));
 
-        // Aggiungi gli handler per gli AJAX delle aree interattive
-        add_action('wp_ajax_risviel_gisdoc_save_interactive_area', array($this, 'ajax_save_interactive_area'));
-        add_action('wp_ajax_risviel_gisdoc_get_interactive_areas', array($this, 'ajax_get_interactive_areas'));
-        add_action('wp_ajax_risviel_gisdoc_get_interactive_area', array($this, 'ajax_get_interactive_area'));
-        add_action('wp_ajax_risviel_gisdoc_delete_interactive_area', array($this, 'ajax_delete_interactive_area'));
-
-        // Aggiungi gli handler per gli AJAX degli indicatori panorama
-        add_action('wp_ajax_risviel_gisdoc_get_panorama_indicators', array($this, 'ajax_get_panorama_indicators'));
-
-        // Hook AJAX per gli indicatori
-        add_action('wp_ajax_risviel_gisdoc_save_panorama_indicator', array($this, 'ajax_save_panorama_indicator'));
-        add_action('wp_ajax_risviel_gisdoc_delete_panorama_indicator', array($this, 'ajax_delete_panorama_indicator'));
-
         // Hook AJAX per il north offset
         add_action('wp_ajax_risviel_gisdoc_set_panorama_north_offset', array($this, 'ajax_set_panorama_north_offset'));
 
@@ -368,7 +355,11 @@ class Risviel_GisDoc_Admin {
      */
     public function enqueue_styles() {
         wp_enqueue_style('leaflet', RISVIEL_GISDOC_PLUGIN_URL . 'assets/leaflet/leaflet.css', array(), '1.7.1');
-        wp_enqueue_style($this->plugin_name, RISVIEL_GISDOC_PLUGIN_URL . 'admin/css/risviel-gisdoc-admin.min.css', array(), $this->version, 'all');
+
+        $admin_css = RISVIEL_GISDOC_PLUGIN_URL . 'admin/css/risviel-gisdoc-admin.min.css';
+        $admin_css = apply_filters('risviel_gisdoc_admin_css', $admin_css);
+        wp_enqueue_style($this->plugin_name, $admin_css, array(), $this->version, 'all');
+
     }
 
     /**
@@ -396,7 +387,10 @@ class Risviel_GisDoc_Admin {
             wp_enqueue_script('threejs', RISVIEL_GISDOC_PLUGIN_URL . 'assets/threejs/three.min.js', array('jquery'), 'r128', false);
 
             // Script comuni per tutte le pagine del plugin
-            wp_register_script($this->plugin_name, RISVIEL_GISDOC_PLUGIN_URL . 'admin/js/risviel-gisdoc-admin.min.js', array('jquery', 'leaflet', 'threejs'), $this->version, false);
+            $admin_js = RISVIEL_GISDOC_PLUGIN_URL . 'admin/js/risviel-gisdoc-admin.min.js';
+            $admin_js = apply_filters('risviel_gisdoc_admin_js', $admin_js);
+            wp_register_script($this->plugin_name, $admin_js, array('jquery', 'leaflet', 'threejs'), $this->version, false);
+
             wp_localize_script($this->plugin_name, 'risviel_gisdoc_admin', array(
                 'ajax_url' => admin_url('admin-ajax.php'),
                 'nonce' => wp_create_nonce('risviel_gisdoc_admin_nonce'),
@@ -417,7 +411,9 @@ class Risviel_GisDoc_Admin {
             if (isset($_GET['page']) && $_GET['page'] === $this->plugin_name . '-panoramas') {
 
                 // Carica gli script specifici del backend
-                wp_enqueue_script($this->plugin_name . '-panorama', RISVIEL_GISDOC_PLUGIN_URL . 'admin/js/risviel-gisdoc-admin-panorama.min.js', array('jquery', 'threejs', $this->plugin_name), $this->version, false);
+                $panorama_js = RISVIEL_GISDOC_PLUGIN_URL . 'admin/js/risviel-gisdoc-admin-panorama.min.js';
+                $panorama_js = apply_filters('risviel_gisdoc_admin_panorama_js', $panorama_js);
+                wp_register_script($this->plugin_name . '-panorama', $panorama_js, array('jquery', 'threejs', $this->plugin_name), $this->version, false);
 
                 wp_enqueue_script($this->plugin_name . '-compass', RISVIEL_GISDOC_PLUGIN_URL . 'public/js/risviel-gisdoc-compass.min.js', array('jquery', 'threejs', $this->plugin_name . '-panorama'), $this->version, false);
  /*               wp_enqueue_script($this->plugin_name . '-panorama', RISVIEL_GISDOC_PLUGIN_URL . 'public/js/risviel-gisdoc-panorama.js', ['jquery', 'threejs'], $this->version, false);
@@ -471,213 +467,6 @@ class Risviel_GisDoc_Admin {
                 wp_enqueue_script('aton-js', RISVIEL_GISDOC_PLUGIN_URL . 'assets/aton/ATON.js', array('jquery', 'aton-sui-js'), '1.0.0', false);
             }
 
-        }
-    }
-
-    /**
-     * Gestisce la richiesta AJAX per salvare un'area interattiva.
-     *
-     * @since    1.0.0
-     */
-    public function ajax_save_interactive_area() {
-        // Verifica il nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'risviel_gisdoc_admin_nonce')) {
-            wp_send_json_error(array('message' => 'Verifica di sicurezza fallita.'));
-            return;
-        }
-
-        try {
-            // Crea o carica un'area interattiva
-            $area = new Risviel_GisDoc_Interactive_Area();
-
-            // Se è un'area esistente, caricala
-            if (isset($_POST['id']) && !empty($_POST['id'])) {
-                $area->load(intval($_POST['id']));
-            }
-
-            // IMPORTANTE: Imposta prima il panorama_id, altrimenti il salvataggio fallirà
-            if (isset($_POST['panorama_id']) && !empty($_POST['panorama_id'])) {
-                $area->set_panorama_id(intval($_POST['panorama_id']));
-            } else {
-                wp_send_json_error(array('message' => 'ID panorama mancante.'));
-                return;
-            }
-
-            // Imposta i titoli
-            if (isset($_POST['title_it'])) {
-                $area->set_title(sanitize_text_field($_POST['title_it']), 'it');
-            }
-
-            if (isset($_POST['title_en'])) {
-                $area->set_title(sanitize_text_field($_POST['title_en']), 'en');
-            }
-
-            if (isset($_POST['title_sa'])) {
-                $area->set_title(sanitize_text_field($_POST['title_sa']), 'sa');
-            }
-
-            // Imposta i contenuti
-            $area->set_content(wp_kses_post($_POST['content_it'] ?? ''), 'it');
-            $area->set_content(wp_kses_post($_POST['content_en'] ?? ''), 'en');
-            $area->set_content(wp_kses_post($_POST['content_sa'] ?? ''), 'sa');
-
-            // Imposta i file audio
-            $area->set_audio_url(esc_url_raw($_POST['audio_it'] ?? ''), 'it');
-            $area->set_audio_url(esc_url_raw($_POST['audio_en'] ?? ''), 'en');
-            $area->set_audio_url(esc_url_raw($_POST['audio_sa'] ?? ''), 'sa');
-
-            // Imposta le coordinate
-            if (isset($_POST['coordinates']) && !empty($_POST['coordinates'])) {
-                $area->set_coordinates($_POST['coordinates']);
-            }
-
-            // Imposta il tipo di azione
-            if (isset($_POST['action_type'])) {
-                $area->set_action_type(sanitize_text_field($_POST['action_type']));
-            }
-
-            // Imposta il target dell'azione
-            if (isset($_POST['action_target'])) {
-                $area->set_action_target(sanitize_text_field($_POST['action_target']));
-            }
-
-            // Gestisci il caricamento della maschera se presente
-            if (isset($_FILES['mask']) && !empty($_FILES['mask']['name'])) {
-                $upload_result = $area->upload_mask($_FILES['mask']);
-                if (!$upload_result) {
-                    wp_send_json_error(array('message' => 'Errore nel caricamento della maschera.'));
-                    return;
-                }
-            } else if (isset($_POST['mask_path']) && !empty($_POST['mask_path'])) {
-                $area->set_mask_path(sanitize_text_field($_POST['mask_path']));
-            }
-
-            // Salva l'area interattiva
-            error_log("Tentativo di salvataggio area interattiva - panorama_id: " . $_POST['panorama_id']);
-
-            if ($area->save()) {
-                // Ottieni i dati dell'area aggiornata
-                $area_data = array(
-                    'id' => $area->get_id(),
-                    'panorama_id' => $area->get_panorama_id(),
-                    'title_it' => $area->get_title('it'),
-                    'title_en' => $area->get_title('en'),
-                    'title_sa' => $area->get_title('sa'),
-                    'content_it' => $area->get_content('it'),
-                    'content_en' => $area->get_content('en'),
-                    'content_sa' => $area->get_content('sa'),
-                    'audio_it' => $area->get_audio_url('it'),
-                    'audio_en' => $area->get_audio_url('en'),
-                    'audio_sa' => $area->get_audio_url('sa'),
-                    'mask_path' => $area->get_mask_path(),
-                    'mask_url' => $area->get_mask_url(),
-                    'coordinates' => $area->get_coordinates(),
-                    'action_type' => $area->get_action_type(),
-                    'action_target' => $area->get_action_target()
-                );
-
-                wp_send_json_success($area_data);
-            } else {
-                wp_send_json_error(array('message' => "Errore nel salvataggio dell\'area interattiva."));
-            }
-        } catch (Exception $e) {
-            error_log("Eccezione durante il salvataggio dell'area interattiva: " . $e->getMessage());
-            wp_send_json_error(array('message' => 'Errore: ' . $e->getMessage()));
-        }
-    }
-
-    /**
-     * Ottiene tutte le aree interattive di un panorama.
-     *
-     * @since    1.0.0
-     */
-    public function ajax_get_interactive_areas() {
-        // Verifica il nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'risviel_gisdoc_admin_nonce')) {
-            wp_send_json_error(array('message' => 'Nonce non valido'));
-            return;
-        }
-
-        // Verifica l'ID del panorama
-        if (!isset($_POST['panorama_id']) || empty($_POST['panorama_id'])) {
-            wp_send_json_error(array('message' => 'ID panorama mancante'));
-            return;
-        }
-
-        // Ottieni le aree interattive
-        $areas = Risviel_GisDoc_Interactive_Area::get_by_panorama_id_as_array($_POST['panorama_id']);
-
-        wp_send_json_success($areas);
-    }
-
-    /**
-     * Ottiene i dati di un'area interattiva.
-     *
-     * @since    1.0.0
-     */
-    public function ajax_get_interactive_area() {
-        // Verifica il nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'risviel_gisdoc_admin_nonce')) {
-            wp_send_json_error(array('message' => 'Nonce non valido'));
-            return;
-        }
-
-        // Verifica l'ID dell'area
-        if (!isset($_POST['area_id']) || empty($_POST['area_id'])) {
-            wp_send_json_error(array('message' => 'ID area mancante'));
-            return;
-        }
-
-        // Carica l'area
-        $area = new Risviel_GisDoc_Interactive_Area($_POST['area_id']);
-
-        // Prepara i dati per la risposta JSON
-        $area_data = array(
-            'id' => $area->get_id(),
-            'panorama_id' => $area->get_panorama_id(),
-            'title_it' => $area->get_title('it'),
-            'title_en' => $area->get_title('en'),
-            'title_sa' => $area->get_title('sa'),
-            'content_it' => $area->get_content('it'),
-            'content_en' => $area->get_content('en'),
-            'content_sa' => $area->get_content('sa'),
-            'audio_url_it' => $area->get_audio_url('it'),
-            'audio_url_en' => $area->get_audio_url('en'),
-            'audio_url_sa' => $area->get_audio_url('sa'),
-            'coordinates' => $area->get_coordinates(),
-            'action_type' => $area->get_action_type(),
-            'action_target' => $area->get_action_target(),
-            'scale' => $area->get_scale()
-        );
-
-        wp_send_json_success($area_data);
-    }
-
-    /**
-     * Elimina un'area interattiva.
-     *
-     * @since    1.0.0
-     */
-    public function ajax_delete_interactive_area() {
-        // Verifica il nonce
-        if (!isset($_POST['nonce']) || !wp_verify_nonce($_POST['nonce'], 'risviel_gisdoc_admin_nonce')) {
-            wp_send_json_error(array('message' => 'Nonce non valido'));
-            return;
-        }
-
-        // Verifica l'ID dell'area
-        if (!isset($_POST['area_id']) || empty($_POST['area_id'])) {
-            wp_send_json_error(array('message' => 'ID area mancante'));
-            return;
-        }
-
-        // Carica e elimina l'area
-        $area = new Risviel_GisDoc_Interactive_Area($_POST['area_id']);
-
-        if ($area->delete()) {
-            wp_send_json_success();
-        } else {
-            wp_send_json_error(array('message' => 'Errore nell\'eliminazione dell\'area interattiva'));
         }
     }
 
@@ -768,7 +557,10 @@ class Risviel_GisDoc_Admin {
      * @since    1.0.0
      */
     public function display_plugin_admin_page() {
-        include_once('partials/risviel-gisdoc-admin-display.php');
+        $partial_path = apply_filters('risviel_gisdoc_admin_display_partial',
+            RISVIEL_GISDOC_PLUGIN_DIR . 'admin/partials/risviel-gisdoc-admin-display.php'
+        );
+        include_once($partial_path);
     }
 
     /**
@@ -777,7 +569,10 @@ class Risviel_GisDoc_Admin {
      * @since    1.0.0
      */
     public function display_plugin_admin_settings() {
-        include_once('partials/risviel-gisdoc-admin-settings.php');
+        $partial_path = apply_filters('risviel_gisdoc_admin_settings_partial',
+            RISVIEL_GISDOC_PLUGIN_DIR . 'admin/partials/risviel-gisdoc-admin-settings.php'
+        );
+        include_once($partial_path);
     }
 
     /**
@@ -786,7 +581,10 @@ class Risviel_GisDoc_Admin {
      * @since    1.0.0
      */
     public function display_plugin_map_points() {
-        include_once('partials/risviel-gisdoc-admin-map-points.php');
+        $partial_path = apply_filters('risviel_gisdoc_admin_map_points_partial',
+            RISVIEL_GISDOC_PLUGIN_DIR . 'admin/partials/risviel-gisdoc-admin-map-points.php'
+        );
+        include_once($partial_path);
     }
 
     /**
@@ -795,7 +593,10 @@ class Risviel_GisDoc_Admin {
      * @since    1.0.0
      */
     public function display_plugin_panoramas() {
-        include_once('partials/risviel-gisdoc-admin-panoramas.php');
+        $partial_path = apply_filters('risviel_gisdoc_admin_panoramas_partial',
+            RISVIEL_GISDOC_PLUGIN_DIR . 'admin/partials/risviel-gisdoc-admin-panoramas.php'
+        );
+        include_once($partial_path);
     }
 
     /**
@@ -985,6 +786,12 @@ class Risviel_GisDoc_Admin {
                 audio_url_it TEXT NOT NULL DEFAULT '',
                 audio_url_en TEXT NOT NULL DEFAULT '',
                 audio_url_sa TEXT NOT NULL DEFAULT '',
+                action_type      varchar(50)  default ''::character varying,
+                action_target    varchar(255) default ''::character varying,
+                action_target_it varchar(255) default ''::character varying,
+                action_target_en varchar(255) default ''::character varying,
+                action_target_sa varchar(255) default ''::character varying,
+                scale            double precision,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 CONSTRAINT fk_panorama
@@ -1009,6 +816,9 @@ class Risviel_GisDoc_Admin {
                 action_type VARCHAR(20) NOT NULL CHECK (action_type IN ('panorama', 'video', 'audio', 'pdf', 'image')),
                 action_target TEXT NOT NULL,
                 icon_type VARCHAR(20) DEFAULT 'default',
+                action_target_it TEXT,
+                action_target_en TEXT,
+                action_target_sa TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
@@ -1749,121 +1559,7 @@ class Risviel_GisDoc_Admin {
     }
 
 
-    /**
-     * Handler AJAX per salvare un indicatore di panorama.
-     */
-    public function ajax_save_panorama_indicator() {
-        check_ajax_referer('risviel_gisdoc_admin_nonce', 'nonce');
 
-        // Raccogli i dati direttamente da $_POST
-        $indicator_data = array(
-            'id' => isset($_POST['indicator_id']) ? intval($_POST['indicator_id']) : 0,
-            'panorama_id' => isset($_POST['panorama_id']) ? intval($_POST['panorama_id']) : 0,
-            'position_x' => isset($_POST['position_x']) ? floatval($_POST['position_x']) : null,
-            'position_y' => isset($_POST['position_y']) ? floatval($_POST['position_y']) : null,
-            'position_z' => isset($_POST['position_z']) ? floatval($_POST['position_z']) : null,
-            'title_it' => isset($_POST['title_it']) ? sanitize_text_field($_POST['title_it']) : '',
-            'title_en' => isset($_POST['title_en']) ? sanitize_text_field($_POST['title_en']) : '',
-            'title_sa' => isset($_POST['title_sa']) ? sanitize_text_field($_POST['title_sa']) : '',
-            'action_type' => isset($_POST['action_type']) ? sanitize_text_field($_POST['action_type']) : '',
-            'action_target' => isset($_POST['action_target']) ? sanitize_text_field($_POST['action_target']) : '',
-            'action_target_it' => isset($_POST['action_target_it']) ? sanitize_text_field($_POST['action_target_it']) : '',
-            'action_target_en' => isset($_POST['action_target_en']) ? sanitize_text_field($_POST['action_target_en']) : '',
-            'action_target_sa' => isset($_POST['action_target_sa']) ? sanitize_text_field($_POST['action_target_sa']) : '',
-            'icon_type' => isset($_POST['icon_type']) ? sanitize_text_field($_POST['icon_type']) : 'default'
-        );
-
-        // Validazione dei dati
-        if ($indicator_data['panorama_id'] <= 0) {
-            wp_send_json_error(array('message' => 'ID panorama non valido'));
-            return;
-        }
-
-        if (empty($indicator_data['title_it'])) {
-            wp_send_json_error(array('message' => 'Il titolo in italiano è obbligatorio'));
-            return;
-        }
-
-        if (empty($indicator_data['action_type'])) {
-            wp_send_json_error(array('message' => 'Il tipo di azione è obbligatorio'));
-            return;
-        }
-
-        if ($indicator_data['position_x'] === null || $indicator_data['position_y'] === null || $indicator_data['position_z'] === null) {
-            wp_send_json_error(array('message' => 'Posizione dell\'indicatore non valida'));
-            return;
-        }
-
-        // Debug: logga i dati ricevuti
-        error_log('Dati indicatore ricevuti: ' . print_r($indicator_data, true));
-
-        try {
-            $panorama = new Risviel_GisDoc_Panorama();
-            $result = $panorama->save_indicator($indicator_data);
-
-            if ($result !== false) {
-                wp_send_json_success(array(
-                    'message' => 'Indicatore salvato con successo',
-                    'indicator_id' => $result,
-                    'indicator' => $indicator_data
-                ));
-            } else {
-                wp_send_json_error(array('message' => 'Errore durante il salvataggio dell\'indicatore'));
-            }
-        } catch (Exception $e) {
-            error_log('Errore nel salvataggio indicatore: ' . $e->getMessage());
-            wp_send_json_error(array('message' => 'Errore interno del server'));
-        }
-    }
-
-
-    /**
-     * Handler AJAX per ottenere gli indicatori di un panorama.
-     */
-    public function ajax_get_panorama_indicators() {
-        check_ajax_referer('risviel_gisdoc_admin_nonce', 'nonce');
-
-        $panorama_id = intval($_POST['panorama_id']);
-        $language = sanitize_text_field($_POST['language'] ?? 'it');
-
-        if (empty($panorama_id)) {
-            wp_send_json_error(array('message' => 'ID panorama non valido'));
-            return;
-        }
-
-        $panorama = new Risviel_GisDoc_Panorama($panorama_id);
-        $indicators = $panorama->get_indicators($language);
-
-        wp_send_json_success(array('indicators' => $indicators));
-    }
-
-    /**
-     * Handler AJAX per eliminare un indicatore di panorama.
-     */
-    public function ajax_delete_panorama_indicator() {
-        check_ajax_referer('risviel_gisdoc_admin_nonce', 'nonce');
-
-        $indicator_id = isset($_POST['indicator_id']) ? intval($_POST['indicator_id']) : 0;
-
-        if ($indicator_id <= 0) {
-            wp_send_json_error(array('message' => 'ID indicatore non valido'));
-            return;
-        }
-
-        try {
-            $panorama = new Risviel_GisDoc_Panorama();
-            $result = $panorama->delete_indicator($indicator_id);
-
-            if ($result !== false) {
-                wp_send_json_success(array('message' => 'Indicatore eliminato con successo'));
-            } else {
-                wp_send_json_error(array('message' => 'Errore durante l\'eliminazione dell\'indicatore'));
-            }
-        } catch (Exception $e) {
-            error_log('Errore nell\'eliminazione indicatore: ' . $e->getMessage());
-            wp_send_json_error(array('message' => 'Errore interno del server'));
-        }
-    }
 
 
 }

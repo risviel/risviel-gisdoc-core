@@ -67,7 +67,11 @@ class Risviel_GisDoc {
 
         // Classi per i modelli di dati
         require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-risviel-gisdoc-map-point.php';
-        require_once plugin_dir_path(dirname(__FILE__)) . 'includes/class-risviel-gisdoc-panorama.php';
+
+        $panorama_class_file = apply_filters('risviel_gisdoc_panorama_class_file',
+            RISVIEL_GISDOC_PLUGIN_DIR . 'includes/class-risviel-gisdoc-panorama.php'
+        );
+        require_once $panorama_class_file;
 
         // Classi per l'admin area
         require_once plugin_dir_path(dirname(__FILE__)) . 'admin/class-risviel-gisdoc-admin.php';
@@ -116,7 +120,8 @@ class Risviel_GisDoc {
      * @access   private
      */
     private function define_public_hooks() {
-        $plugin_public = new Risviel_GisDoc_Public($this->get_plugin_name(), $this->get_version());
+        $public_class = apply_filters('risviel_gisdoc_public_class', 'Risviel_GisDoc_Public');
+        $plugin_public = new $public_class($this->get_plugin_name(), $this->get_version());
 
         // Enqueue public scripts e styles
         $this->loader->add_action('wp_enqueue_scripts', $plugin_public, 'enqueue_styles');
